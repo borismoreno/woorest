@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using WooCommerceNET;
 using WooCommerceNET.WooCommerce.v3;
 
 namespace woorest.Controllers;
@@ -19,9 +20,9 @@ public class WoocommerceController : ControllerBase
     {
         var customerKey = _configuration.GetValue<string>("Woocommerce:CustomerKey");
         var customerSecret = _configuration.GetValue<string>("Woocommerce:CustomerSecret");
-        Customer respuesta = new Customer();
-        respuesta.email = customerKey;
-        respuesta.first_name = customerSecret;
-        return Ok(respuesta);
+        RestAPI rest = new RestAPI("https://thegeekstoreec.com/wp-json/wc/v3/", customerKey, customerSecret);
+        WCObject wc = new WCObject(rest);
+        var customer = await wc.Customer.Get(1);
+        return Ok(customer);
     }
 }
