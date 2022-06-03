@@ -33,14 +33,23 @@ public class WoocommerceController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> PostWeebhook(WeebhookInputDto weebhookInputDto)
+    public async Task<ActionResult> PostWeebhook([FromForm] WeebhookInputDto weebhookInputDto)
     {
+        var contentType = "";
+        foreach (var header in Request.Headers)
+        {
+            if (header.Key == "Content-Type")
+            {
+                contentType = header.Value;
+                break;
+            }
+        }
         var weebhook = new Weebhook
         {
             WeebhookId = weebhookInputDto.Id,
             ParentId = weebhookInputDto.ParentId,
             Number = weebhookInputDto.Number,
-            OrderKey = weebhookInputDto.OrderKey,
+            OrderKey = contentType,
             CreatedVia = weebhookInputDto.CreatedVia,
             Status = weebhookInputDto.Status,
             Currency = weebhookInputDto.Currency,
