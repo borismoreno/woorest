@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using WooCommerceNET;
 using WooCommerceNET.WooCommerce.v3;
+using woorest.Dtos;
+using woorest.Entities;
+using woorest.Repositories;
 
 namespace woorest.Controllers;
 
@@ -10,9 +13,12 @@ public class WoocommerceController : ControllerBase
 {
     private readonly IConfiguration _configuration;
 
-    public WoocommerceController(IConfiguration configuration)
+    private readonly IWoocommerceRepository _woocommercerepository;
+
+    public WoocommerceController(IConfiguration configuration, IWoocommerceRepository woocommerceRepository)
     {
         _configuration = configuration;
+        _woocommercerepository = woocommerceRepository;
     }
 
     [HttpGet(Name = "GetCustomer")]
@@ -24,5 +30,32 @@ public class WoocommerceController : ControllerBase
         WCObject wc = new WCObject(rest);
         var customer = await wc.Customer.Get(1);
         return Ok(customer);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> PostWeebhook(WeebhookInputDto weebhookInputDto)
+    {
+        var weebhook = new Weebhook
+        {
+            WeebhookId = weebhookInputDto.Id,
+            ParentId = weebhookInputDto.ParentId,
+            Number = weebhookInputDto.Number,
+            OrderKey = weebhookInputDto.OrderKey,
+            CreatedVia = weebhookInputDto.CreatedVia,
+            Status = weebhookInputDto.Status,
+            Currency = weebhookInputDto.Currency,
+            DateCreated = Convert.ToDateTime(weebhookInputDto.DateCreated),
+            Billing = new Billing
+            {
+                FirstName = weebhookInputDto.Billing?.FirstName,
+                LastName = weebhookInputDto.Billing?.LastName,
+                Address_1 = weebhookInputDto.Billing?.Address_1,
+                City = weebhookInputDto.Billing?.City,
+                PostCode = weebhookInputDto.Billing?.PostCode
+            }
+        };
+
+        await _woocommercerepository.CreateAsync(weebhook);
+        return Ok();
     }
 }
