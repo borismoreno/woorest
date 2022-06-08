@@ -49,6 +49,7 @@ public class WoocommerceController : ControllerBase
     {
         var cloudApiToken = _configuration.GetValue<string>("CloudApi:Token");
         var cloudApiPhoneId = _configuration.GetValue<string>("CloudApi:PhoneId");
+        var cloudApiTemplate = _configuration.GetValue<string>("CloudApi:Template");
         var weebhook = new Weebhook
         {
             WeebhookId = weebhookInputDto.Id,
@@ -88,7 +89,7 @@ public class WoocommerceController : ControllerBase
         contenido.to = weebhook.Billing.Phone;
         contenido.type = "template";
         contenido.template = new Template();
-        contenido.template.name = "woocommerce_completed";
+        contenido.template.name = cloudApiTemplate;
         contenido.template.language = new Language();
         contenido.template.language.code = "es";
         contenido.template.components = new List<Component>();
