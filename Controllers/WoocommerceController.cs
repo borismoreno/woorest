@@ -80,11 +80,11 @@ public class WoocommerceController : ControllerBase
             type = "text",
             text = weebhook.Billing.FirstName
         });
-        parametros.Add(new Parameter
-        {
-            type = "text",
-            text = weebhook.Number
-        });
+        // parametros.Add(new Parameter
+        // {
+        //     type = "text",
+        //     text = weebhook.Number
+        // });
         contenido.messaging_product = "whatsapp";
         contenido.to = weebhook.Billing.Phone;
         contenido.type = "template";
