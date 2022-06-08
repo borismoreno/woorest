@@ -2,20 +2,21 @@ namespace woorest.Dtos;
 
 public record WeebhookInputDto(
     int Id,
-    int ParentId,
+    int Parent_Id,
     string? Number,
-    string? OrderKey,
-    string? CreatedVia,
+    string? Order_Key,
+    string? Created_Via,
     string? Status,
     string? Currency,
-    string? DateCreated,
+    string? Date_Created,
     BillingDto? Billing
 );
 
 public record BillingDto(
-    string? FirstName,
-    string? LastName,
+    string? First_Name,
+    string? Last_Name,
     string? Address_1,
     string? City,
-    string? PostCode
+    string? PostCode,
+    string? State
 );

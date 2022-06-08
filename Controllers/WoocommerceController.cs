@@ -5,6 +5,8 @@ using WooCommerceNET.WooCommerce.v3;
 using woorest.Dtos;
 using woorest.Entities;
 using woorest.Repositories;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace woorest.Controllers;
 
@@ -34,31 +36,34 @@ public class WoocommerceController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> PostWeebhook()
+    public async Task<ActionResult> PostWeebhook(WeebhookInputDto weebhookInputDto)
     {
         var content = "";
         using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
         {
             content = await reader.ReadToEndAsync();
         }
+
+        // var jsonObject = JsonNode.Parse(content)?.AsObject().Deserialize<Weebhook>();
+
         var weebhook = new Weebhook
         {
-            // WeebhookId = weebhookInputDto.Id,
-            // ParentId = weebhookInputDto.ParentId,
-            // Number = weebhookInputDto.Number,
+            WeebhookId = weebhookInputDto.Id,
+            ParentId = weebhookInputDto.Parent_Id,
+            Number = weebhookInputDto.Number,
             OrderKey = content,
-            // CreatedVia = weebhookInputDto.CreatedVia,
-            // Status = weebhookInputDto.Status,
-            // Currency = weebhookInputDto.Currency,
-            // DateCreated = Convert.ToDateTime(weebhookInputDto.DateCreated),
-            // Billing = new Billing
-            // {
-            //     FirstName = weebhookInputDto.Billing?.FirstName,
-            //     LastName = weebhookInputDto.Billing?.LastName,
-            //     Address_1 = weebhookInputDto.Billing?.Address_1,
-            //     City = weebhookInputDto.Billing?.City,
-            //     PostCode = weebhookInputDto.Billing?.PostCode
-            // }
+            CreatedVia = weebhookInputDto.Created_Via,
+            Status = weebhookInputDto.Status,
+            Currency = weebhookInputDto.Currency,
+            DateCreated = Convert.ToDateTime(weebhookInputDto.Date_Created),
+            Billing = new Billing
+            {
+                FirstName = weebhookInputDto.Billing?.First_Name,
+                LastName = weebhookInputDto.Billing?.Last_Name,
+                Address_1 = weebhookInputDto.Billing?.Address_1,
+                City = weebhookInputDto.Billing?.City,
+                PostCode = weebhookInputDto.Billing?.PostCode
+            }
         };
 
         await _woocommercerepository.CreateAsync(weebhook);
