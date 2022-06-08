@@ -30,6 +30,7 @@ builder.Services.AddSingleton(serviceProvider =>
 });
 
 builder.Services.AddSingleton<IWoocommerceRepository, WoocommerceRepository>();
+builder.Services.AddHttpClient();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

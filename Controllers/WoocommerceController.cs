@@ -7,6 +7,10 @@ using woorest.Entities;
 using woorest.Repositories;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using woorest.Models;
+using System.Net.Http.Headers;
+using Microsoft.Net.Http.Headers;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace woorest.Controllers;
 
@@ -18,10 +22,15 @@ public class WoocommerceController : ControllerBase
 
     private readonly IWoocommerceRepository _woocommercerepository;
 
-    public WoocommerceController(IConfiguration configuration, IWoocommerceRepository woocommerceRepository)
+    private readonly IHttpClientFactory _httpClientFactory;
+
+    private static readonly HttpClient client = new HttpClient();
+
+    public WoocommerceController(IConfiguration configuration, IWoocommerceRepository woocommerceRepository, IHttpClientFactory httpClientFactory)
     {
         _configuration = configuration;
         _woocommercerepository = woocommerceRepository;
+        _httpClientFactory = httpClientFactory;
     }
 
     [HttpGet(Name = "GetCustomer")]
@@ -38,20 +47,14 @@ public class WoocommerceController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> PostWeebhook(WeebhookInputDto weebhookInputDto)
     {
-        var content = "";
-        using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
-        {
-            content = await reader.ReadToEndAsync();
-        }
-
-        // var jsonObject = JsonNode.Parse(content)?.AsObject().Deserialize<Weebhook>();
-
+        var cloudApiToken = _configuration.GetValue<string>("CloudApi:Token");
+        var cloudApiPhoneId = _configuration.GetValue<string>("CloudApi:PhoneId");
         var weebhook = new Weebhook
         {
             WeebhookId = weebhookInputDto.Id,
             ParentId = weebhookInputDto.Parent_Id,
             Number = weebhookInputDto.Number,
-            OrderKey = content,
+            OrderKey = weebhookInputDto.Order_Key,
             CreatedVia = weebhookInputDto.Created_Via,
             Status = weebhookInputDto.Status,
             Currency = weebhookInputDto.Currency,
@@ -62,11 +65,49 @@ public class WoocommerceController : ControllerBase
                 LastName = weebhookInputDto.Billing?.Last_Name,
                 Address_1 = weebhookInputDto.Billing?.Address_1,
                 City = weebhookInputDto.Billing?.City,
-                PostCode = weebhookInputDto.Billing?.PostCode
+                PostCode = weebhookInputDto.Billing?.PostCode,
+                Phone = weebhookInputDto.Billing?.Phone?.Replace('+', ' ').Trim()
             }
         };
 
         await _woocommercerepository.CreateAsync(weebhook);
+
+        var contenido = new CloudApi();
+        List<Parameter> parametros = new List<Parameter>();
+        parametros.Add(new Parameter
+        {
+            type = "text",
+            text = weebhook.Billing.FirstName
+        });
+        parametros.Add(new Parameter
+        {
+            type = "text",
+            text = weebhook.Number
+        });
+        contenido.messaging_product = "whatsapp";
+        contenido.to = weebhook.Billing.Phone;
+        contenido.type = "template";
+        contenido.template = new Template();
+        contenido.template.name = "woocommerce_completed";
+        contenido.template.language = new Language();
+        contenido.template.language.code = "es";
+        contenido.template.components = new List<Component>();
+        contenido.template.components.Add(new Component
+        {
+            type = "body",
+            parameters = parametros
+        });
+
+        var todoItemJson = new StringContent(
+        JsonSerializer.Serialize(contenido),
+        Encoding.UTF8,
+        Application.Json); // using static System.Net.Mime.MediaTypeNames;
+
+        var httpClient = _httpClientFactory.CreateClient();
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {cloudApiToken}");
+        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        var httpResponseMessage = await httpClient.PostAsync($"https://graph.facebook.com/v13.0/{cloudApiPhoneId}/messages", todoItemJson);
+
         return Ok();
     }
 }

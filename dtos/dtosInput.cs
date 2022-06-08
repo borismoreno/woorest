@@ -18,5 +18,6 @@ public record BillingDto(
     string? Address_1,
     string? City,
     string? PostCode,
-    string? State
+    string? State,
+    string? Phone
 );
