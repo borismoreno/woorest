@@ -73,41 +73,44 @@ public class WoocommerceController : ControllerBase
 
         await _woocommercerepository.CreateAsync(weebhook);
 
-        var contenido = new CloudApi();
-        List<Parameter> parametros = new List<Parameter>();
-        parametros.Add(new Parameter
+        if (weebhook.Status == "completed")
         {
-            type = "text",
-            text = weebhook.Billing.FirstName
-        });
-        parametros.Add(new Parameter
-        {
-            type = "text",
-            text = weebhook.Number
-        });
-        contenido.messaging_product = "whatsapp";
-        contenido.to = weebhook.Billing.Phone;
-        contenido.type = "template";
-        contenido.template = new Template();
-        contenido.template.name = cloudApiTemplate;
-        contenido.template.language = new Language();
-        contenido.template.language.code = "es";
-        contenido.template.components = new List<Component>();
-        contenido.template.components.Add(new Component
-        {
-            type = "body",
-            parameters = parametros
-        });
+            var contenido = new CloudApi();
+            List<Parameter> parametros = new List<Parameter>();
+            parametros.Add(new Parameter
+            {
+                type = "text",
+                text = weebhook.Billing.FirstName
+            });
+            parametros.Add(new Parameter
+            {
+                type = "text",
+                text = weebhook.Number
+            });
+            contenido.messaging_product = "whatsapp";
+            contenido.to = weebhook.Billing.Phone;
+            contenido.type = "template";
+            contenido.template = new Template();
+            contenido.template.name = cloudApiTemplate;
+            contenido.template.language = new Language();
+            contenido.template.language.code = "es";
+            contenido.template.components = new List<Component>();
+            contenido.template.components.Add(new Component
+            {
+                type = "body",
+                parameters = parametros
+            });
 
-        var todoItemJson = new StringContent(
-        JsonSerializer.Serialize(contenido),
-        Encoding.UTF8,
-        Application.Json); // using static System.Net.Mime.MediaTypeNames;
+            var todoItemJson = new StringContent(
+            JsonSerializer.Serialize(contenido),
+            Encoding.UTF8,
+            Application.Json); // using static System.Net.Mime.MediaTypeNames;
 
-        var httpClient = _httpClientFactory.CreateClient();
-        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {cloudApiToken}");
-        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        var httpResponseMessage = await httpClient.PostAsync($"https://graph.facebook.com/v13.0/{cloudApiPhoneId}/messages", todoItemJson);
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {cloudApiToken}");
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var httpResponseMessage = await httpClient.PostAsync($"https://graph.facebook.com/v13.0/{cloudApiPhoneId}/messages", todoItemJson);
+        }
 
         return Ok();
     }
